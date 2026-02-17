@@ -2,10 +2,11 @@
 title: 'Assignment 5: Data Visualization'
 author: 'Leo Zhang'
 date: 'Spring 2026'
-output: pdf_document
+output:
+  pdf_document: default
 geometry: margin = 2.54cm
-fig_height: 3
-fig_width: 4
+fig_height: 6
+fig_width: 6
 ---
 
 ## OVERVIEW
@@ -34,9 +35,22 @@ knitr::opts_chunk$set(tidy = TRUE, tidy.opts = list(width.cutoff = 20))
 library(cowplot)
 library(here)
 library(tidyverse)
-#2 
-
+getwd()
+lake <- read.csv(here(
+'./Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv'), 
+stringsAsFactors = TRUE)
+litter <- read.csv(here(
+'./Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv'), 
+stringsAsFactors = TRUE)
+#2
+class(lake$sampledate)
+class(litter$collectDate)
+lake <- lake |> mutate(sampledate = ymd(sampledate))
+litter <- litter |> mutate(collectDate = ymd(collectDate))
+class(lake$sampledate)
+class(litter$collectDate)
 ```
+
 ## Define your theme
 3. Build a theme and set it as your default theme. Customize the look of at least two of the following: 
  * Plot background
@@ -47,7 +61,8 @@ library(tidyverse)
 
 ```{r build plot theme, message = FALSE, warning = FALSE}
 #3
-
+design <- theme_minimal() + theme(plot.background = element_rect(fill = '#F0FFFF'), plot.title = element_text(color = '#312C85'), plot.subtitle = element_text(color = '#193CB8'), axis.text = element_text(face = 'bold'), panel.grid = element_line(color = '#000000'), legend.background = element_rect(fill = '#90EE90'), legend.title = element_text(color = '#721378'), legend.position = 'bottom')
+theme_set(design)
 ```
 
 ## Create graphs
@@ -57,9 +72,10 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r plot total P vs PO4, message = FALSE, warning = FALSE}
 #4 
-
+length(unique(lake$lakename))
+p1 <- ggplot(lake, aes(x = po4, y = tp_ug, color = lakename)) + geom_point(size = 0.75, na.rm = TRUE) + geom_smooth(linewidth = 1, method = lm, na.rm = TRUE) + scale_color_manual(values = c('#0096FF', '#E30B5C')) + xlim(0, 50) + ylim(0, 150) + labs(title = 'Relationship Between Total Phosphorus And Phosphate', subtitle = 'Data From Two Lakes', x = 'phosphate', y = 'total phosphorus')
+p1
 ```
-
 
 5. [NTL-LTER] Make three separate boxplots of (a) temperature, (b) TP, and (c) TN, with month as the x axis and lake as a color aesthetic. Then, create a cowplot that combines the three graphs. Make sure that only one legend is present and that graph axes are aligned. Show all months, even those where no data was collected. 
 
@@ -71,12 +87,21 @@ Tips:
 
 ```{r Create boxplots, message = FALSE, warning = FALSE}
 #5 
-
+temperature <- ggplot(lake, aes(x = factor(month, levels = 1:12, labels = month.abb), y = temperature_C, color = lakename)) + geom_boxplot(na.rm = TRUE) + scale_color_manual(values = c('#0096FF', '#E30B5C')) + scale_x_discrete(drop = FALSE) + theme(axis.text.x = element_blank(), legend.position = 'none') + labs(title = 'Distribution Of Temperature, TP, And TN In Different Months', subtitle = 'Data From Two Lakes', x = '', y = 'celsius temp')
+temperature
+total_P <- ggplot(lake, aes(x = factor(month, levels = 1:12, labels = month.abb), y = tp_ug, color = lakename)) + geom_boxplot(na.rm = TRUE) + scale_color_manual(values = c('#0096FF', '#E30B5C')) + scale_x_discrete(drop = FALSE) + theme(axis.text.x = element_blank(), legend.position = 'none') + labs(title = '', subtitle = '', x = '', y = 'total phosphorus')
+total_P
+total_N <- ggplot(lake, aes(x = factor(month, levels = 1:12, labels = month.abb), y = tn_ug, color = lakename)) + geom_boxplot(na.rm = TRUE) + scale_color_manual(values = c('#0096FF', '#E30B5C')) + scale_x_discrete(drop = FALSE) + labs(title = '', subtitle = '', x = 'month', y = 'total nitrogen')
+total_N
+p2 <- plot_grid(temperature, total_P, total_N, nrow = 3, align = 'v', rel_heights = c(1, 1.25, 1.8))
+p2
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
-> Answer: 
+
+> Answer: For both lakes, the highest median temperature occurs in September. Before October, the median temperature for Paul Lake is higher than that for Peter Lake. The median TP for Peter Lake is always higher than that for Paul Lake. Between May and September, while median TP for Peter Lake increases continually, there is an approximate quadratic tendency for Paul Lake. The median TN for Peter Lake is always higher than that for Paul Lake. While August features the minimum median TN for Paul Lake, it features the maximum median TN for Peter Lake.
+
 
 6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
 
@@ -84,12 +109,15 @@ Question: What do you observe about the variables of interest over seasons and b
 
 ```{r Plot litter, message = FALSE, warning = FALSE}
 #6
-
-
+length(unique(litter$nlcdClass))
+p3 <- ggplot(subset(litter, functionalGroup == 'Needles'), aes(x = collectDate, y = dryMass, color = nlcdClass)) + geom_point(size = 1.5, na.rm = TRUE) + scale_color_manual(values = c('#0096FF', '#E30B5C', '#00A36C')) + labs(title = 'Distribution Of Dry Mass', subtitle = 'Data About Needles', x = 'year', y = 'dry mass')
+p3
 #7
-
-
+p4 <- ggplot(subset(litter, functionalGroup == 'Needles'), aes(x = collectDate, y = dryMass)) + geom_point(size = 1.5, na.rm = TRUE) + facet_grid( ~ nlcdClass) + labs(title = 'Distribution Of Dry Mass', subtitle = 'Data About Needles', x = 'year', y = 'dry mass')
+p4
 ```
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer:
+
+> Answer: The plot in Question 7 is more effective. The three facets clearly indicate different NLCD classes, facilitating the comparison. Conversely, using a color palette to differentiate in one plot is kind of obscure.
+
