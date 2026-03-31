@@ -1,5 +1,5 @@
 ---
-title: 'Assignment 10: Spatial Analysis in R'
+title: 'Assignment 10: Spatial Analysis in R (Update)'
 author: 'Leo Zhang'
 output: html_document
 ---
@@ -51,7 +51,7 @@ outlook <- outlook %>% filter(STATEFP == 31)
 #4. Reveal the CRS of the counties features
 st_crs(outlook)
 #5. Plot the data
-mapview(outlook)
+mapview(outlook, col.regions = '#0096FF', alpha.regions = 0.25)
 ```
 
 6.    What is the EPSG code of the Counties dataset? Is this a geographic or a projected coordinate reference system? (In other words, does this CRS use angular or planar coordinate units?) To what datum is this CRS associated? (Tip: lookup the EPSG code on <https://epsg.io> or <https://spatialreference.org>)
@@ -172,7 +172,7 @@ Up next we will do some spatial analysis with our data. To prepare for this, we 
 external <- st_transform(outlook, 32614)
 internal <- st_transform(detail_finish, 32614)
 #21 Plot the data
-p3 <- ggplot() + geom_sf(data = external, fill = '#0096FF', alpha = 0.25) + geom_sf(data = internal, aes(size = gage_ht), color = '#B727F5') + theme_gray() + labs(title = 'NWIS Gage Locations in Nebraska (Classified by Height, Transformed)', subtitle = 'Leo Zhang')
+p3 <- ggplot() + geom_sf(data = external, fill = '#0096FF', alpha = 0.25) + geom_sf(data = internal, aes(size = gage_ht), color = '#E30B5C') + theme_gray() + labs(title = 'NWIS Gage Locations in Nebraska (Classified by Height, Transformed)', subtitle = 'Leo Zhang')
 p3
 ```
 
@@ -196,8 +196,9 @@ focus <- external %>% filter(NAME == 'Washington')
 #23 Spatially select gages within the selected county to a new spatial dataframe
 close_point <- internal %>% st_filter(focus, .predicate = st_intersects)
 #24 Spatially select gages within 20k of the selected county to a new spatial dataframe
-farther_point <- internal %>% st_filter((st_buffer(focus, 20000)), .predicate = st_intersects)
+farther_point <- internal %>% st_filter(st_buffer(focus, 20000), .predicate = st_intersects)
+farther_point <- farther_point %>% filter(site_no != 6610705 & site_no != 6610710)
 #25 Plot
-p4 <- ggplot() + geom_sf(data = external, fill = '#0096FF', alpha = 0.25) + geom_sf(data = focus, fill = '#B727F5') + geom_sf(data = close_point, color = '#F2F527') + geom_sf(data = farther_point, color = '#27F538') + theme_gray() + labs(title = 'Analysis on Washington County', subtitle = 'Leo Zhang')
-p4
+mapview(external, col.regions = '#0096FF', alpha.regions = 0.25) + mapview(focus, col.regions = '#27F52A') + mapview(close_point, col.regions = '#FFD700') + mapview(farther_point, col.regions = '#E30B5C')
 ```
+
